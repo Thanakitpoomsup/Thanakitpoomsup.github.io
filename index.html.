@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>มาดูทําไม😈😭</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    #displayArea {
+      margin: 20px auto;
+      max-width: 600px;
+      max-height: 400px;
+      border: 2px solid #333;
+      background: #fff;
+      position: relative;
+    }
+    #displayArea img,
+    #displayArea video {
+      max-width: 100%;
+      max-height: 400px;
+    }
+    #changeForm {
+      margin-top: 20px;
+    }
+    #changeForm input[type="text"],
+    #changeForm input[type="file"],
+    #changeForm input[type="password"] {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>มาดูทําไม😈😭</h1>
+
+  <div id="displayArea">
+    <!-- รูปหรือวิดีโอจะแสดงตรงนี้ -->
+  </div>
+
+  <div id="changeForm">
+    <input type="file" id="fileInput" accept="image/*,video/*" />
+    <br />
+    รหัสผ่าน: <input type="password" id="passInput" maxlength="4" size="4" />
+    <button onclick="changeMedia()">เปลี่ยน</button>
+  </div>
+
+  <script>
+    const displayArea = document.getElementById("displayArea");
+    const fileInput = document.getElementById("fileInput");
+    const passInput = document.getElementById("passInput");
+
+    const PASSWORD = "5555";
+
+    // โหลดข้อมูลเก่า
+    window.onload = () => {
+      const savedType = localStorage.getItem("mediaType");
+      const savedData = localStorage.getItem("mediaData");
+      if (savedType && savedData) {
+        showMedia(savedType, savedData);
+      }
+    };
+
+    function showMedia(type, data) {
+      displayArea.innerHTML = "";
+      if (type === "image") {
+        const img = document.createElement("img");
+        img.src = data;
+        displayArea.appendChild(img);
+      } else if (type === "video") {
+        const video = document.createElement("video");
+        video.src = data;
+        video.controls = true;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        displayArea.appendChild(video);
+      }
+    }
+
+    function changeMedia() {
+      const file = fileInput.files[0];
+      const pass = passInput.value;
+
+      if (pass !== PASSWORD) {
+        alert("รหัสผ่านไม่ถูกต้อง");
+        return;
+      }
+
+      if (!file) {
+        alert("กรุณาเลือกไฟล์รูปภาพหรือวิดีโอ");
+        return;
+      }
+
+      const fileType = file.type;
+      if (!fileType.startsWith("image") && !fileType.startsWith("video")) {
+        alert("กรุณาเลือกไฟล์เป็นรูปภาพหรือวิดีโอเท่านั้น");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const dataURL = e.target.result;
+        if (fileType.startsWith("image")) {
+          showMedia("image", dataURL);
+          localStorage.setItem("mediaType", "image");
+          localStorage.setItem("mediaData", dataURL);
+        } else if (fileType.startsWith("video")) {
+          showMedia("video", dataURL);
+          localStorage.setItem("mediaType", "video");
+          localStorage.setItem("mediaData", dataURL);
+        }
+        alert("เปลี่ยนสื่อสำเร็จแล้ว");
+        passInput.value = "";
+        fileInput.value = "";
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>

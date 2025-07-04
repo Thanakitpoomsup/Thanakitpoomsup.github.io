@@ -30,99 +30,77 @@
     #changeForm {
       margin-top: 20px;
     }
-    #changeForm input[type="text"],
-    #changeForm input[type="file"],
-    #changeForm input[type="password"] {
-      margin: 5px;
-    }
   </style>
 </head>
 <body>
 
   <h1>มาดูทําไม😈😭</h1>
 
-  <div id="displayArea">
-    <!-- รูปหรือวิดีโอจะแสดงตรงนี้ -->
-  </div>
+  <div id="displayArea"></div>
 
   <div id="changeForm">
     <input type="file" id="fileInput" accept="image/*,video/*" />
     <br />
     รหัสผ่าน: <input type="password" id="passInput" maxlength="4" size="4" />
-    <button onclick="changeMedia()">เปลี่ยน</button>
+    <button onclick="uploadMedia()">อัปโหลด</button>
   </div>
 
   <script>
     const displayArea = document.getElementById("displayArea");
-    const fileInput = document.getElementById("fileInput");
-    const passInput = document.getElementById("passInput");
 
-    const PASSWORD = "5555";
-
-    // โหลดข้อมูลเก่า
-    window.onload = () => {
-      const savedType = localStorage.getItem("mediaType");
-      const savedData = localStorage.getItem("mediaData");
-      if (savedType && savedData) {
-        showMedia(savedType, savedData);
+    async function loadMedia() {
+      try {
+        const res = await fetch("http://110.164.204.242:13819/media");
+        const data = await res.json();
+        showMedia(data.type, data.url);
+      } catch (err) {
+        console.error("โหลดไม่ได้:", err);
       }
-    };
+    }
 
-    function showMedia(type, data) {
+    function showMedia(type, url) {
       displayArea.innerHTML = "";
       if (type === "image") {
         const img = document.createElement("img");
-        img.src = data;
+        img.src = url;
         displayArea.appendChild(img);
       } else if (type === "video") {
         const video = document.createElement("video");
-        video.src = data;
+        video.src = url;
         video.controls = true;
         video.autoplay = true;
-        video.muted = true;
         video.loop = true;
+        video.muted = true;
         displayArea.appendChild(video);
       }
     }
 
-    function changeMedia() {
-      const file = fileInput.files[0];
-      const pass = passInput.value;
+    async function uploadMedia() {
+      const file = document.getElementById("fileInput").files[0];
+      const pass = document.getElementById("passInput").value;
 
-      if (pass !== PASSWORD) {
-        alert("รหัสผ่านไม่ถูกต้อง");
-        return;
+      if (!file) return alert("กรุณาเลือกไฟล์");
+      if (pass !== "5555") return alert("รหัสผ่านผิด");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("http://110.164.204.242:13819/upload", {
+          method: "POST",
+          body: formData
+        });
+        if (!res.ok) throw new Error("Upload failed");
+
+        await loadMedia();
+        alert("อัปโหลดสำเร็จ");
+      } catch (err) {
+        console.error("อัปโหลดผิดพลาด:", err);
+        alert("อัปโหลดล้มเหลว");
       }
-
-      if (!file) {
-        alert("กรุณาเลือกไฟล์รูปภาพหรือวิดีโอ");
-        return;
-      }
-
-      const fileType = file.type;
-      if (!fileType.startsWith("image") && !fileType.startsWith("video")) {
-        alert("กรุณาเลือกไฟล์เป็นรูปภาพหรือวิดีโอเท่านั้น");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const dataURL = e.target.result;
-        if (fileType.startsWith("image")) {
-          showMedia("image", dataURL);
-          localStorage.setItem("mediaType", "image");
-          localStorage.setItem("mediaData", dataURL);
-        } else if (fileType.startsWith("video")) {
-          showMedia("video", dataURL);
-          localStorage.setItem("mediaType", "video");
-          localStorage.setItem("mediaData", dataURL);
-        }
-        alert("เปลี่ยนสื่อสำเร็จแล้ว");
-        passInput.value = "";
-        fileInput.value = "";
-      };
-      reader.readAsDataURL(file);
     }
+
+    window.onload = loadMedia;
   </script>
 </body>
 </html>
